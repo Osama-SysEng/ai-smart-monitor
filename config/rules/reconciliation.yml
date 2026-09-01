@@ -1,0 +1,13 @@
+rules:
+  - rule_id: R-QTY-001
+    name: Source quantity mismatch
+    type: quantity
+    enabled: true
+    severity_default: HIGH
+    threshold: 0
+  - rule_id: R-COST-001
+    name: Cost impact threshold
+    type: financial
+    enabled: true
+    severity_default: MEDIUM
+    threshold: 1000
