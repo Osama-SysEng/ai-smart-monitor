@@ -1,0 +1,6 @@
+from typing import Protocol
+from .contracts import ImportPage, ImportSnapshot
+
+class ImportRepository(Protocol):
+    def get(self, identifier: str) -> ImportSnapshot | None: ...
+    def list(self, cursor: str | None = None, limit: int = 50) -> ImportPage: ...

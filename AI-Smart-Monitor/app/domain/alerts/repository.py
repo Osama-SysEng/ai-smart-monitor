@@ -1,0 +1,6 @@
+from typing import Protocol
+from .contracts import AlertPage, AlertSnapshot
+
+class AlertRepository(Protocol):
+    def get(self, identifier: str) -> AlertSnapshot | None: ...
+    def list(self, cursor: str | None = None, limit: int = 50) -> AlertPage: ...

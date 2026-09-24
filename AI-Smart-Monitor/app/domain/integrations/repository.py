@@ -1,0 +1,6 @@
+from typing import Protocol
+from .contracts import IntegrationPage, IntegrationSnapshot
+
+class IntegrationRepository(Protocol):
+    def get(self, identifier: str) -> IntegrationSnapshot | None: ...
+    def list(self, cursor: str | None = None, limit: int = 50) -> IntegrationPage: ...

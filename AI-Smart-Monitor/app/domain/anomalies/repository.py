@@ -1,0 +1,6 @@
+from typing import Protocol
+from .contracts import AnomalyPage, AnomalySnapshot
+
+class AnomalyRepository(Protocol):
+    def get(self, identifier: str) -> AnomalySnapshot | None: ...
+    def list(self, cursor: str | None = None, limit: int = 50) -> AnomalyPage: ...

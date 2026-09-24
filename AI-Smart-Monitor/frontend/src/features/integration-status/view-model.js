@@ -1,0 +1,1 @@
+export function toViewModel(record) { return { id: record.id, status: record.status || "UNKNOWN", label: record.label || `integration status: ${record.id}`, correlationId: record.correlation_id || record.correlationId || null }; }

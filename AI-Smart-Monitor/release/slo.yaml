@@ -1,0 +1,8 @@
+objectives:
+  api_availability:
+    target: 99.9
+    window_days: 30
+  import_acceptance_latency:
+    p95_seconds: 5
+  erp_delivery:
+    measure: accepted_or_operator_reviewed

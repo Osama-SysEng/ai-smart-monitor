@@ -1,0 +1,4 @@
+transaction_id,item_code,quantity,cost
+DIS-10482,ITEM-A,5,150
+DIS-100,ITEM-A,95,10
+DIS-200,ITEM-B,40,25

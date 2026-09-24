@@ -1,0 +1,12 @@
+service: ai-smart-monitor
+environment: staging
+required:
+  - managed_postgres_tls
+  - redis_auth
+  - secret_manager_injection
+  - migration_job
+  - erp_sandbox
+forbidden:
+  - automatic_schema_creation
+  - public_admin_routes
+  - plain_text_credentials

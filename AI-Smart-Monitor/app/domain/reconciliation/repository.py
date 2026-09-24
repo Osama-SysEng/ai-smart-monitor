@@ -1,0 +1,6 @@
+from typing import Protocol
+from .contracts import ReconciliationPage, ReconciliationSnapshot
+
+class ReconciliationRepository(Protocol):
+    def get(self, identifier: str) -> ReconciliationSnapshot | None: ...
+    def list(self, cursor: str | None = None, limit: int = 50) -> ReconciliationPage: ...

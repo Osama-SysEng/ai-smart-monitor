@@ -1,0 +1,4 @@
+transaction_id,item_code,quantity,cost,branch_code,warehouse_code
+DIS-10482,ITEM-A,7,150,B07,W01
+DIS-100,ITEM-A,100,10,B07,W01
+DIS-200,ITEM-B,40,25,B03,W02

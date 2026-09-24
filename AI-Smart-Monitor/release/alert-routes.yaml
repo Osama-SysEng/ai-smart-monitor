@@ -1,0 +1,10 @@
+alerts:
+  - name: database_readiness_failed
+    severity: critical
+    owner: platform-oncall
+  - name: erp_dead_letter_growth
+    severity: high
+    owner: integration-oncall
+  - name: tenant_authorization_denied_spike
+    severity: high
+    owner: security-oncall

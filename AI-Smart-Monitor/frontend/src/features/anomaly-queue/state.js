@@ -1,0 +1,2 @@
+export const initialState = { status: "idle", data: [], error: null, updatedAt: null };
+export function reducer(state, action) { if (action.type === "loading") return { ...state, status: "loading", error: null }; if (action.type === "success") return { status: "ready", data: action.data, error: null, updatedAt: action.updatedAt }; if (action.type === "error") return { ...state, status: "error", error: action.error }; return state; }

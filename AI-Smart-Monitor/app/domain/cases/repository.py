@@ -1,0 +1,6 @@
+from typing import Protocol
+from .contracts import CasePage, CaseSnapshot
+
+class CaseRepository(Protocol):
+    def get(self, identifier: str) -> CaseSnapshot | None: ...
+    def list(self, cursor: str | None = None, limit: int = 50) -> CasePage: ...
