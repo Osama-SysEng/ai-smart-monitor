@@ -47,7 +47,7 @@ curl -X POST http://localhost:8000/api/v1/reconciliation/run
 - alert lifecycle + routing
 - Telegram adapter
 - AI provider abstraction + safe mock provider
-- ERP outbox + retry/verification skeleton
+- ERP outbox with retry, circuit breaker, and verification
 - append-only audit events
 - dashboard API
 - React dashboard

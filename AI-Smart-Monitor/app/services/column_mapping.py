@@ -16,12 +16,17 @@ def norm(s): return re.sub(r"[^a-z0-9]+","_",str(s).strip().lower()).strip("_")
 
 def suggest_mapping(columns):
     result={}
+    if not columns:
+        return result
     for c in columns:
         n=norm(c)
         exact=next((k for k,v in ALIASES.items() if n in [norm(x) for x in v]),None)
         if exact: result[c]={"field":exact,"score":100,"method":"exact_or_alias"}; continue
         choices=[(alias,field) for field,aliases in ALIASES.items() for alias in aliases]
-        match=process.extractOne(n,[norm(a) for a,_ in choices],scorer=fuzz.WRatio)
+        try:
+            match=process.extractOne(n,[norm(a) for a,_ in choices],scorer=fuzz.WRatio)
+        except Exception:
+            match=None
         if match and match[1]>=75:
             field=choices[match[2]][1]
             result[c]={"field":field,"score":round(match[1]),"method":"fuzzy"}

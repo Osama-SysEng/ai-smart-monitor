@@ -1,5 +1,6 @@
 import hashlib
 import io
+import math
 import re
 
 import pandas as pd
@@ -35,6 +36,18 @@ def _read_frame(payload: bytes, filename: str) -> pd.DataFrame:
 
 def _safe_error(errors: list[dict]) -> list[dict]:
     return errors[: settings.max_error_details]
+
+
+def _safe_cost(value):
+    if value is None or value == "":
+        return None
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    if not math.isfinite(number):
+        return None
+    return number
 
 
 async def ingest(file, source_id: str, db: Session, correlation_id: str | None = None, tenant_id: str = "default", actor: str = "system"):
@@ -104,9 +117,17 @@ async def ingest(file, source_id: str, db: Session, correlation_id: str | None =
             errors.append({"row": int(row_index) + 2, "code": "DUPLICATE_RECORD", "errors": ["duplicate_record"]})
             continue
         seen_hashes.add(fingerprint)
+        try:
+            quantity_value = float(row["quantity"])
+        except (TypeError, ValueError):
+            errors.append({"row": int(row_index) + 2, "code": "ROW_INVALID", "errors": ["quantity_invalid"], "warnings": []})
+            continue
+        if not math.isfinite(quantity_value):
+            errors.append({"row": int(row_index) + 2, "code": "ROW_INVALID", "errors": ["quantity_invalid"], "warnings": []})
+            continue
         facts.append(SourceFact(
             transaction_id=row["transaction_id"], item_code=row["item_code"], source_id=normalized_source,
-            quantity=float(row["quantity"]), cost=float(row["cost"]) if row.get("cost") not in (None, "") else None,
+            quantity=quantity_value, cost=_safe_cost(row.get("cost")),
             business_date=str(row.get("business_date")) if row.get("business_date") is not None else None,
             branch_code=str(row.get("branch_code")) if row.get("branch_code") is not None else None,
             warehouse_code=str(row.get("warehouse_code")) if row.get("warehouse_code") is not None else None,
