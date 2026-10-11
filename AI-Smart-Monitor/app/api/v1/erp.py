@@ -24,11 +24,11 @@ def add(event: Event, request: Request, identity: Identity = Depends(require_cap
 
 
 @router.get("/outbox")
-def list_outbox(limit: int = Query(default=50, ge=1, le=200), status: str | None = None, identity: Identity = Depends(require_capability("erp:read")), db: Session = Depends(get_db)):
+def list_outbox(limit: int = Query(default=50, ge=1, le=200), offset: int = Query(default=0, ge=0), status: str | None = None, identity: Identity = Depends(require_capability("erp:read")), db: Session = Depends(get_db)):
     query = db.query(ErpOutbox).filter(ErpOutbox.tenant_id == identity.tenant_id)
     if status:
         query = query.filter(ErpOutbox.status == status.upper())
-    return query.order_by(ErpOutbox.id.desc()).limit(limit).all()
+    return query.order_by(ErpOutbox.id.desc()).offset(offset).limit(limit).all()
 
 
 @router.post("/outbox/{event_id}/retry")

@@ -24,8 +24,8 @@ def create(anomaly_id: int, body: CaseCreateRequest, request: Request, identity:
 
 
 @router.get("")
-def list_cases(limit: int = Query(default=50, ge=1, le=200), status: str | None = None, identity: Identity = Depends(require_capability("cases:read")), db: Session = Depends(get_db)):
+def list_cases(limit: int = Query(default=50, ge=1, le=200), offset: int = Query(default=0, ge=0), status: str | None = None, identity: Identity = Depends(require_capability("cases:read")), db: Session = Depends(get_db)):
     query = db.query(InvestigationCase).filter(InvestigationCase.tenant_id == identity.tenant_id)
     if status:
         query = query.filter(InvestigationCase.status == status.upper())
-    return query.order_by(InvestigationCase.id.desc()).limit(limit).all()
+    return query.order_by(InvestigationCase.id.desc()).offset(offset).limit(limit).all()
