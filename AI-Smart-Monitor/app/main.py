@@ -13,10 +13,12 @@ from app.api.v1.router import api_router
 from app.core.config import settings
 from app.core.errors import DomainError
 from app.core.identity import resolve_identity
+from app.core.logging_utils import get_logger, log_access, request_id_ctx
 from app.core.metrics import runtime_metrics
 from app.db.session import SessionLocal, init_db
 
 request_id_context: ContextVar[str] = ContextVar("request_id", default="")
+access_logger = get_logger("app.access")
 _hits: defaultdict[str, list[float]] = defaultdict(list)
 
 
@@ -58,36 +60,49 @@ async def validation_error_handler(request: Request, exc: RequestValidationError
 
 @app.middleware("http")
 async def request_controls(request: Request, call_next):
-    correlation_id = request.headers.get("X-Request-Id") or uuid.uuid4().hex
+    correlation_id = request.headers.get("X-Request-ID") or uuid.uuid4().hex
     token = request_id_context.set(correlation_id)
+    token_std = request_id_ctx.set(correlation_id)
     started_at = time.perf_counter()
     runtime_metrics.started()
+
+    def _respond(response, status_code: int):
+        response.headers["X-Request-ID"] = correlation_id
+        log_access(
+            access_logger,
+            method=request.method,
+            path=request.url.path,
+            status_code=status_code,
+            duration_ms=(time.perf_counter() - started_at) * 1000,
+        )
+        return response
+
     try:
         if request.method in {"POST", "PUT", "PATCH"}:
             content_length = int(request.headers.get("content-length", "0") or 0)
             if content_length > settings.max_upload_bytes:
-                return JSONResponse({"error": {"code": "PAYLOAD_TOO_LARGE", "message": "Request exceeds configured upload limit", "request_id": correlation_id}}, status_code=413)
+                return _respond(JSONResponse({"error": {"code": "PAYLOAD_TOO_LARGE", "message": "Request exceeds configured upload limit", "request_id": correlation_id}}, status_code=413), 413)
         public_paths = {"/", "/api/v1/health", "/api/v1/health/ready"}
         if request.url.path not in public_paths:
             try:
                 with SessionLocal() as db:
                     request.state.identity = resolve_identity(request, db)
             except HTTPException as exc:
-                return JSONResponse({"error": {"code": "UNAUTHORIZED", "message": str(exc.detail), "request_id": correlation_id}}, status_code=exc.status_code)
+                return _respond(JSONResponse({"error": {"code": "UNAUTHORIZED", "message": str(exc.detail), "request_id": correlation_id}}, status_code=exc.status_code), exc.status_code)
         client_key = request.client.host if request.client else "unknown"
         now = time.time()
         _hits[client_key] = [timestamp for timestamp in _hits[client_key] if now - timestamp < 60]
         if len(_hits[client_key]) >= settings.rate_limit_per_minute:
-            return JSONResponse({"error": {"code": "RATE_LIMITED", "message": "Rate limit exceeded", "request_id": correlation_id}}, status_code=429)
+            return _respond(JSONResponse({"error": {"code": "RATE_LIMITED", "message": "Rate limit exceeded", "request_id": correlation_id}}, status_code=429), 429)
         _hits[client_key].append(now)
         response = await call_next(request)
-        response.headers["X-Request-Id"] = correlation_id
         route = getattr(request.scope.get("route"), "path", request.url.path)
         runtime_metrics.record(route, response.status_code, time.perf_counter() - started_at)
-        return response
+        return _respond(response, response.status_code)
     finally:
         runtime_metrics.completed()
         request_id_context.reset(token)
+        request_id_ctx.reset(token_std)
 
 
 @app.get("/")
