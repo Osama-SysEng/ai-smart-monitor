@@ -54,3 +54,4 @@ curl -X POST http://localhost:8000/api/v1/reconciliation/run
 - PostgreSQL/Redis/Docker
 - Prometheus configuration
 - tests and sample datasets
+- Structured JSON logging + request tracing (see docs/LOGGING.md)
